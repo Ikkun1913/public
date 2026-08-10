@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ログインフォーム（サンプル）</title>
+  <style>
+    :root{--bg:#f5f7fb;--card:#ffffff;--accent:#2563eb;--danger:#dc2626;--text:#0f172a}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;padding:16px}
+    .card{background:var(--card);width:100%;max-width:420px;padding:24px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.08)}
+    h1{margin:0 0 12px;font-size:20px}
+    form{display:grid;gap:12px}
+    label{font-size:13px}
+    input[type="email"], input[type="password"], input[type="text"]{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px}
+    .row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+    .actions{display:flex;gap:8px;align-items:center}
+    button{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:8px;font-size:15px;cursor:pointer}
+    button:disabled{opacity:0.6;cursor:not-allowed}
+    .secondary{background:transparent;color:var(--accent);border:1px solid #e6eefc}
+    .small{font-size:13px;color:#374151}
+    .error{color:var(--danger);font-size:13px}
+    .success{color:green;font-size:14px}
+    .pw-toggle{background:transparent;border:none;color:#374151;cursor:pointer;padding:6px;border-radius:6px}
+    @media (max-width:420px){.card{padding:18px}}
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <h1>サインイン</h1>
+
+    <div id="message" aria-live="polite" style="min-height:1.25em"></div>
+
+    <form id="loginForm" autocomplete="on" novalidate>
+      <div>
+        <label for="email">メールアドレス</label>
+        <input id="email" name="email" type="email" inputmode="email" placeholder="you@example.com" required />
+      </div>
+
+      <div>
+        <label for="password">パスワード</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="password" name="password" type="password" placeholder="パスワード" required aria-describedby="pwHelp" />
+          <button type="button" class="pw-toggle" id="togglePw" aria-label="パスワード表示切替">表示</button>
+        </div>
+        <div id="pwHelp" class="small">8文字以上が推奨です</div>
+      </div>
+
+      <div class="row">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input id="remember" name="remember" type="checkbox" />
+          <span class="small">次回から自動入力</span>
+        </label>
+        <a href="#" class="small" onclick="alert('パスワードリセットの実装はサーバー側で行います');return false">パスワードを忘れた?</a>
+      </div>
+
+      <div class="actions">
+        <button id="submitBtn" type="submit">ログイン</button>
+        <button id="demoBtn" type="button" class="secondary">デモでログイン</button>
+      </div>
+    </form>
+
+    <p class="small" style="margin-top:12px">このサンプルはフロントエンドのみのモック実装です。実運用では必ずサーバー側で認証してください。</p>
+  </main>
+
+  <script>
+    // シンプルなクライアント側のサンプル認証（モック）
+    // 実運用ではサーバーに HTTPS で送信し、サーバー側で検証・セッション管理を行ってください。
+
+    const loginForm = document.getElementById('loginForm');
+    const messageEl = document.getElementById('message');
+    const emailInput = document.getElementById('email');
+    const pwInput = document.getElementById('password');
+    const rememberChk = document.getElementById('remember');
+    const togglePwBtn = document.getElementById('togglePw');
+    const submitBtn = document.getElementById('submitBtn');
+    const demoBtn = document.getElementById('demoBtn');
+
+    // デモ用の有効な資格情報（例）
+    const DEMO_CREDENTIALS = { email: 'user@example.com', password: 'password123' };
+
+    // ページ読み込み時に「記憶」を復元
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('demo_saved_email');
+      if (saved) {
+        emailInput.value = saved;
+        rememberChk.checked = true;
+      }
+    });
+
+    // パスワード表示切替
+    togglePwBtn.addEventListener('click', () => {
+      const isPw = pwInput.type === 'password';
+      pwInput.type = isPw ? 'text' : 'password';
+      togglePwBtn.textContent = isPw ? '非表示' : '表示';
+      togglePwBtn.setAttribute('aria-pressed', isPw ? 'true' : 'false');
+    });
+
+    // 簡単な入力バリデーション
+    function validate(email, password) {
+      if (!email) return 'メールアドレスを入力してください。';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return '有効なメールアドレスを入力してください。';
+      if (!password) return 'パスワードを入力してください。';
+      if (password.length < 6) return 'パスワードは6文字以上にしてください。';
+      return '';
+    }
+
+    // ログイン処理（モック）
+    async function performLogin(email, password) {
+      // 擬似的に非同期処理を模擬
+      await new Promise(r => setTimeout(r, 600));
+
+      // ここではハードコードされたデモ資格情報のみ許可
+      if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
+        return { ok: true, token: 'demo-token-abc123' };
+      }
+      return { ok: false, error: 'メールアドレスまたはパスワードが間違っています。' };
+    }
+
+    loginForm.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      messageEl.textContent = '';
+      messageEl.className = '';
+
+      const email = emailInput.value.trim();
+      const password = pwInput.value;
+
+      const vErr = validate(email, password);
+      if (vErr) {
+        messageEl.textContent = vErr;
+        messageEl.className = 'error';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '検証中...';
+
+      try {
+        const res = await performLogin(email, password);
+        if (res.ok) {
+          messageEl.textContent = 'ログインに成功しました。';
+          messageEl.className = 'success';
+
+          // Remember 機能（メールアドレスのみ保存）
+          if (rememberChk.checked) {
+            localStorage.setItem('demo_saved_email', email);
+          } else {
+            localStorage.removeItem('demo_saved_email');
+          }
+
+          // 実運用ではここでトークンをセキュアに保存したり、リダイレクトします。
+          // 例: window.location.href = '/dashboard';
+        } else {
+          messageEl.textContent = res.error || 'ログインに失敗しました。';
+          messageEl.className = 'error';
+        }
+      } catch (err) {
+        messageEl.textContent = '通信エラーが発生しました。';
+        messageEl.className = 'error';
+        console.error(err);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'ログイン';
+      }
+    });
+
+    // デモボタンでデモ資格情報を自動入力してログイン（開発用）
+    demoBtn.addEventListener('click', async () => {
+      emailInput.value = DEMO_CREDENTIALS.email;
+      pwInput.value = DEMO_CREDENTIALS.password;
+      rememberChk.checked = true;
+      // submit イベントを発火
+      loginForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+  </script>
+</body>
+</html>
